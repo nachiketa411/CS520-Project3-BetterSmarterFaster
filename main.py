@@ -5,7 +5,6 @@ import numpy as np
 
 from AgentUStar import AgentUStar
 from Constants import ENVIRONMENT_PATH, GRAPH_DIST_PATH, UTILITIES_PATH
-from NumpyArrayEncoder import NumpyArrayEncoder
 from Predator import Predator
 from Prey import Prey
 from TransitionMatrix import TransitionMatrix
@@ -21,7 +20,6 @@ def read_from_json():
 
     with open(GRAPH_DIST_PATH, "r") as node_dist:
         json_object_2 = json.load(node_dist)
-
 
     for g_id in json_object.items():
         graph_id = int(g_id[0])
