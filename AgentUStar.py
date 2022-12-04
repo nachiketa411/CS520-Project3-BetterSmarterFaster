@@ -35,4 +35,4 @@ class AgentUStar(Agent):
         return [count, -3, self.counter_for_prey_actually_found, self.counter_for_predator_actually_found]
 
     def get_next_move(self):
-        return self.utility[self.currPos, self.predator.currPos, self.prey.currPos, 0]
+        return int(self.utility[self.currPos, self.predator.currPos, self.prey.currPos, 0])
