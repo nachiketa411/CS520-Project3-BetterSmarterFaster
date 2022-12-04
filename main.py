@@ -50,18 +50,22 @@ if __name__ == '__main__':
     success_of_Agent = 0
     failure_rate_1 = 0
     failure_rate_2 = 0
-    for k in range(100):
-        # Since the transition matrices calculated here won't change for different iterations of the same graph,
-        # we precalculate them and use them for each of the 30 iteration
-        transitions = TransitionMatrix(converted_graph[k])
-        predator_transitions = transitions.predator_transition
-        prey_transitions = transitions.prey_transition
 
-        # Calculate the Utility of each state
-        valueIterator = ValueIteration(predator_transitions, prey_transitions,
-                                       converted_graph[k], converted_distances[k])
-        valueIterator.value_iteration()
-        utility_values_for_each_graph[k] = valueIterator.utility
+    my_graph_utilities = np.load(UTILITIES_PATH, allow_pickle=True)
+
+    for k in range(100):
+        # # Since the transition matrices calculated here won't change for different iterations of the same graph,
+        # # we precalculate them and use them for each of the 30 iteration
+        # transitions = TransitionMatrix(converted_graph[k])
+        # predator_transitions = transitions.predator_transition
+        # prey_transitions = transitions.prey_transition
+        #
+        # # Calculate the Utility of each state
+        # valueIterator = ValueIteration(predator_transitions, prey_transitions,
+        #                                converted_graph[k], converted_distances[k])
+        # valueIterator.value_iteration()
+        # utility_values_for_each_graph[k] = valueIterator.utility
+        utility_values_for_each_graph[k] = my_graph_utilities[()][k]
 
         for i in range(30):
             prey = Prey(converted_graph[k])
