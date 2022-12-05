@@ -83,7 +83,7 @@ if __name__ == '__main__':
             if steps_taken[1] == -3:
                 failure_rate_2 += 1
 
-    np.save(UTILITIES_PATH, utility_values_for_each_graph)
+    # np.save(UTILITIES_PATH, utility_values_for_each_graph)
     print('Total Number of Successes: ', success_of_Agent)
     print('Total Number of Deaths   : ', failure_rate_1)
     print('Total Number of Hangs    : ', failure_rate_2)
