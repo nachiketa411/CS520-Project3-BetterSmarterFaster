@@ -75,6 +75,14 @@ if __name__ == '__main__':
             predator.initialize(agent)
             agent.set_utility(utility_values_for_each_graph[k])
 
+            while agent.utility[agent.currPos, predator.currPos, prey.currPos, 1] == np.inf:
+                prey = Prey(converted_graph[k])
+                predator = Predator(converted_graph[k], converted_distances[k])
+                agent = AgentUStar(prey, converted_graph[k])
+                agent.initialize(predator)
+                predator.initialize(agent)
+                agent.set_utility(utility_values_for_each_graph[k])
+
             steps_taken = agent.move_agent()
             if steps_taken[1] == -1:
                 success_of_Agent += 1
