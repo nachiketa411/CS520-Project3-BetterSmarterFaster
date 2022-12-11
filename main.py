@@ -4,6 +4,7 @@ import json
 import numpy as np
 
 from AgentUStar import AgentUStar
+from AgentUpartial import AgentUpartial
 from Constants import ENVIRONMENT_PATH, GRAPH_DIST_PATH, UTILITIES_PATH
 from Predator import Predator
 from Prey import Prey
@@ -53,12 +54,12 @@ if __name__ == '__main__':
 
     my_graph_utilities = np.load(UTILITIES_PATH, allow_pickle=True)
 
-    for k in range(100):
+    for k in range(1):
         # # Since the transition matrices calculated here won't change for different iterations of the same graph,
         # # we precalculate them and use them for each of the 30 iteration
-        # transitions = TransitionMatrix(converted_graph[k])
+        transitions = TransitionMatrix(converted_graph[k])
         # predator_transitions = transitions.predator_transition
-        # prey_transitions = transitions.prey_transition
+        prey_transitions = transitions.prey_transition
         #
         # # Calculate the Utility of each state
         # valueIterator = ValueIteration(predator_transitions, prey_transitions,
@@ -67,10 +68,10 @@ if __name__ == '__main__':
         # utility_values_for_each_graph[k] = valueIterator.utility
         utility_values_for_each_graph[k] = my_graph_utilities[()][k]
 
-        for i in range(30):
+        for i in range(1):
             prey = Prey(converted_graph[k])
             predator = Predator(converted_graph[k], converted_distances[k])
-            agent = AgentUStar(prey, converted_graph[k])
+            agent = AgentUpartial(prey, converted_graph[k])
             agent.initialize(predator)
             predator.initialize(agent)
             agent.set_utility(utility_values_for_each_graph[k])
@@ -78,12 +79,14 @@ if __name__ == '__main__':
             while agent.utility[agent.currPos, predator.currPos, prey.currPos, 1] == np.inf:
                 prey = Prey(converted_graph[k])
                 predator = Predator(converted_graph[k], converted_distances[k])
-                agent = AgentUStar(prey, converted_graph[k])
+                # agent = AgentUStar(prey, converted_graph[k])
+                agent = AgentUpartial(prey, converted_graph[k])
                 agent.initialize(predator)
                 predator.initialize(agent)
                 agent.set_utility(utility_values_for_each_graph[k])
 
-            steps_taken = agent.move_agent()
+            # steps_taken = agent.move_agent()
+            steps_taken = agent.move_agent(prey_transitions)
             if steps_taken[1] == -1:
                 success_of_Agent += 1
             if steps_taken[1] == -2:
@@ -95,6 +98,9 @@ if __name__ == '__main__':
     print('Total Number of Successes: ', success_of_Agent)
     print('Total Number of Deaths   : ', failure_rate_1)
     print('Total Number of Hangs    : ', failure_rate_2)
+    print("Agent path: ",agent.path)
+    print("Prey path: ",prey.path)
+    print("Predator path: ",predator.path)
 
     # To recall the data from the npy file:
     # my_graph_utilities = np.load(UTILITIES_PATH)
