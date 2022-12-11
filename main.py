@@ -40,6 +40,19 @@ def read_from_json():
         distances_dictionary[graph_id] = distance_mat
     return graph_dictionary, distances_dictionary
 
+# def set_training_testing_data(dataset, batch_size):
+#     # dataset = (m x n)
+#     # dataset.shape[0] = m i.e. No. of rows or input_size
+#     total_indices = set(range(dataset.shape[0]))
+#     training_indices = set(random.sample(total_indices, batch_size))
+#     testing_indices = list(total_indices - training_indices)
+#     training_indices = list(training_indices)
+#
+#     np.random.shuffle(training_indices)
+#     np.random.shuffle(testing_indices)
+#
+#     training_data = dataset[training_indices]
+#     testing_data = dataset[testing_indices]
 
 if __name__ == '__main__':
     # ---------------------Read from JSON-------------------
