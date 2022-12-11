@@ -81,8 +81,7 @@ def input_x_y(node_distances, utility):
         x_values[4][column] = node_distances[agent_loc][predator_loc]
         x_values[5][column] = node_distances[prey_loc][predator_loc]
         y_values[column] = utility[agent_loc, predator_loc, prey_loc, 1]
-
-    return x_values, y_values
+    return [x_values, y_values]
 
 
 if __name__ == '__main__':
