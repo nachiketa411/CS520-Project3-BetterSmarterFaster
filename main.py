@@ -41,6 +41,37 @@ def read_from_json():
     return graph_dictionary, distances_dictionary
 
 
+def input_x_y(node_distances, utility):
+    x_values = [[0] * 125000] * 6
+    y_values = [0] * 125000
+    agent_low = 0
+    agent_high = 2500
+    prey_low = 0
+    prey_high = 50
+    for agent_pos in range(50):
+        for i in range(agent_low, agent_high):
+            x_values[0][i] = agent_pos
+        for prey_pos in range(50):
+            for j in range(prey_low, prey_high):
+                x_values[1][j] = prey_pos
+            for predator_pos in range(50):
+                x_values[2][prey_low + predator_pos] = predator_pos
+            prey_low += 50
+            prey_high += 50
+        agent_low += 2500
+        agent_high += 2500
+    for column in range(125000):
+        agent_loc = x_values[0][column]
+        prey_loc = x_values[1][column]
+        predator_loc = x_values[2][column]
+        x_values[3][column] = node_distances[agent_loc][prey_loc]
+        x_values[4][column] = node_distances[agent_loc][predator_loc]
+        x_values[5][column] = node_distances[prey_loc][predator_loc]
+        y_values[column] = utility[agent_loc, predator_loc, prey_loc, 1]
+
+    return x_values, y_values
+
+
 if __name__ == '__main__':
     # ---------------------Read from JSON-------------------
     converted_graph, converted_distances = read_from_json()
@@ -98,9 +129,9 @@ if __name__ == '__main__':
     print('Total Number of Successes: ', success_of_Agent)
     print('Total Number of Deaths   : ', failure_rate_1)
     print('Total Number of Hangs    : ', failure_rate_2)
-    print("Agent path: ",agent.path)
-    print("Prey path: ",prey.path)
-    print("Predator path: ",predator.path)
+    print("Agent path: ", agent.path)
+    print("Prey path: ", prey.path)
+    print("Predator path: ", predator.path)
 
     # To recall the data from the npy file:
     # my_graph_utilities = np.load(UTILITIES_PATH)
