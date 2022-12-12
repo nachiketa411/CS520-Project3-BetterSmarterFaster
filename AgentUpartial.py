@@ -6,7 +6,7 @@ from Constants import NO_OF_STEPS_4, NO_OF_NODES
 
 
 class AgentUpartial(Agent):
-    def move_agent(self, prey_transition_matrix):
+    def move_agent(self, prey_transition_matrix, predator_transition_matrix):
         count = 0
         belief = [1 / 49] * 50
         belief[self.currPos] = 0
@@ -19,16 +19,16 @@ class AgentUpartial(Agent):
             belief = self.update_belief(belief, to_survey)
             # print("After survey", sum(belief))
             # print(belief)
-            next_move = self.get_next_move(belief)
+            next_move = self.get_next_move(belief, prey_transition_matrix, predator_transition_matrix)
 
             self.currPos = next_move
             self.path.append(next_move)
             if self.currPos == self.prey.currPos:
-                print("Yippiieeee")
+                # print("Yippiieeee")
                 count += 1
                 return [count, -1, self.counter_for_prey_actually_found, self.counter_for_predator_actually_found]
             elif self.currPos == self.predator.currPos:
-                print("Ded")
+                # print("Ded")
                 count += 1
                 return [count, -2, self.counter_for_prey_actually_found, self.counter_for_predator_actually_found]
 
@@ -37,7 +37,7 @@ class AgentUpartial(Agent):
             # print(belief)
             self.prey.take_next_move(copy.deepcopy(self.graph))
             if self.currPos == self.prey.currPos:
-                print("Yippiieeee")
+                # print("Yippiieeee")
                 count += 1
                 return [count, -1, self.counter_for_prey_actually_found, self.counter_for_predator_actually_found]
 
@@ -46,25 +46,34 @@ class AgentUpartial(Agent):
             # print(belief)
             self.predator.take_next_move()
             if self.currPos == self.predator.currPos:
-                print("Ded")
+                # print("Ded")
                 count += 1
                 return [count, -2, self.counter_for_prey_actually_found, self.counter_for_predator_actually_found]
             count += 1
         return [count, -3, self.counter_for_prey_actually_found, self.counter_for_predator_actually_found]
 
-    def get_next_move(self, belief):
+    def get_next_move(self, belief, prey_transition_matrix, predator_transition_matrix):
         upartial = {}
         for possible_next_move in self.graph[self.currPos]:
-            summation = 0
-            for i in range(len(belief)):
-                if self.utility[possible_next_move, self.predator.currPos, i, 1] == np.inf:
-                    summation = np.inf
-                    break
-                else:
-                    summation += (belief[i] * self.utility[possible_next_move, self.predator.currPos, i, 1])
-            upartial[possible_next_move] = summation
+            if possible_next_move == self.predator.currPos:
+                upartial[possible_next_move] = np.inf
+            else:
+                summation = 0
+                predator_transition = predator_transition_matrix[possible_next_move]
+                neighbours_of_predator = self.graph[self.predator.currPos]
+                for neighbour_of_predator in neighbours_of_predator:
+                    belief_with_transition = np.array(belief) @ np.array(prey_transition_matrix)
+                    for i in range(len(belief)):
+                        if self.utility[possible_next_move, neighbour_of_predator, i, 1] == np.inf and \
+                                (predator_transition[self.predator.currPos, neighbour_of_predator] == 0 or
+                                 belief_with_transition[i] == 0):
+                            summation += 0
+                        else:
+                            summation += (predator_transition[self.predator.currPos, neighbour_of_predator] *
+                                          belief_with_transition[i] *
+                                          self.utility[possible_next_move, neighbour_of_predator, i, 1])
+                upartial[possible_next_move] = summation
         optimal_step = min(upartial, key=upartial.get)
-        # optimal_step = self.utility[self.currPos, self.predator.currPos, possible_prey, 0]
         return int(optimal_step)
 
     def select_node(self, belief_mat):

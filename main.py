@@ -120,64 +120,64 @@ if __name__ == '__main__':
 
     my_graph_utilities = np.load(UTILITIES_PATH, allow_pickle=True)
 
-    arr = input_x_y(converted_distances[0], my_graph_utilities[()][0], 6, 125000)
-    split_arr = shuffle_and_split(10, arr[0], my_graph_utilities[()][0], 125000)
+    # arr = input_x_y(converted_distances[0], my_graph_utilities[()][0], 6, 125000)
+    # split_arr = shuffle_and_split(10, arr[0], my_graph_utilities[()][0], 125000)
     # print(arr[0])
     # print(np.shape(arr[0]))
     # print(split_arr[0][0], split_arr[1])
     # print(np.shape(split_arr[0]))
 
-    for k in range(1):
-        nn = NeuralNetwork(6, sigmoid, gradient_sigmoid,
-                           euclidean_loss, gradient_euclidean_loss, BATCH_SIZE, NO_OF_EPOCHS)
-        nn.fit(arr[0], arr[1])
     # for k in range(1):
-    #     # # Since the transition matrices calculated here won't change for different iterations of the same graph,
-    #     # # we precalculate them and use them for each of the 30 iteration
-    #     transitions = TransitionMatrix(converted_graph[k])
-    #     # predator_transitions = transitions.predator_transition
-    #     prey_transitions = transitions.prey_transition
-    #     #
-    #     # # Calculate the Utility of each state
-    #     # valueIterator = ValueIteration(predator_transitions, prey_transitions,
-    #     #                                converted_graph[k], converted_distances[k])
-    #     # valueIterator.value_iteration()
-    #     # utility_values_for_each_graph[k] = valueIterator.utility
-    #     utility_values_for_each_graph[k] = my_graph_utilities[()][k]
-    #
-    #     for i in range(1):
-    #         prey = Prey(converted_graph[k])
-    #         predator = Predator(converted_graph[k], converted_distances[k])
-    #         agent = AgentUpartial(prey, converted_graph[k])
-    #         agent.initialize(predator)
-    #         predator.initialize(agent)
-    #         agent.set_utility(utility_values_for_each_graph[k])
-    #
-    #         while agent.utility[agent.currPos, predator.currPos, prey.currPos, 1] == np.inf:
-    #             prey = Prey(converted_graph[k])
-    #             predator = Predator(converted_graph[k], converted_distances[k])
-    #             # agent = AgentUStar(prey, converted_graph[k])
-    #             agent = AgentUpartial(prey, converted_graph[k])
-    #             agent.initialize(predator)
-    #             predator.initialize(agent)
-    #             agent.set_utility(utility_values_for_each_graph[k])
-    #
-    #         # steps_taken = agent.move_agent()
-    #         steps_taken = agent.move_agent(prey_transitions)
-    #         if steps_taken[1] == -1:
-    #             success_of_Agent += 1
-    #         if steps_taken[1] == -2:
-    #             failure_rate_1 += 1
-    #         if steps_taken[1] == -3:
-    #             failure_rate_2 += 1
-    #
-    # # np.save(UTILITIES_PATH, utility_values_for_each_graph)
-    # print('Total Number of Successes: ', success_of_Agent)
-    # print('Total Number of Deaths   : ', failure_rate_1)
-    # print('Total Number of Hangs    : ', failure_rate_2)
-    # print("Agent path: ", agent.path)
-    # print("Prey path: ", prey.path)
-    # print("Predator path: ", predator.path)
+        # nn = NeuralNetwork(6, sigmoid, gradient_sigmoid,
+        #                    euclidean_loss, gradient_euclidean_loss, BATCH_SIZE, NO_OF_EPOCHS)
+        # nn.fit(arr[0], arr[1])
+    for k in range(100):
+        # # Since the transition matrices calculated here won't change for different iterations of the same graph,
+        # # we precalculate them and use them for each of the 30 iteration
+        transitions = TransitionMatrix(converted_graph[k])
+        predator_transitions = transitions.predator_transition
+        prey_transitions = transitions.prey_transition
+        #
+        # # Calculate the Utility of each state
+        # valueIterator = ValueIteration(predator_transitions, prey_transitions,
+        #                                converted_graph[k], converted_distances[k])
+        # valueIterator.value_iteration()
+        # utility_values_for_each_graph[k] = valueIterator.utility
+        utility_values_for_each_graph[k] = my_graph_utilities[()][k]
+
+        for i in range(30):
+            prey = Prey(converted_graph[k])
+            predator = Predator(converted_graph[k], converted_distances[k])
+            agent = AgentUpartial(prey, converted_graph[k])
+            agent.initialize(predator)
+            predator.initialize(agent)
+            agent.set_utility(utility_values_for_each_graph[k])
+
+            while agent.utility[agent.currPos, predator.currPos, prey.currPos, 1] == np.inf:
+                prey = Prey(converted_graph[k])
+                predator = Predator(converted_graph[k], converted_distances[k])
+                # agent = AgentUStar(prey, converted_graph[k])
+                agent = AgentUpartial(prey, converted_graph[k])
+                agent.initialize(predator)
+                predator.initialize(agent)
+                agent.set_utility(utility_values_for_each_graph[k])
+
+            # steps_taken = agent.move_agent()
+            steps_taken = agent.move_agent(prey_transitions, predator_transitions)
+            if steps_taken[1] == -1:
+                success_of_Agent += 1
+            if steps_taken[1] == -2:
+                failure_rate_1 += 1
+            if steps_taken[1] == -3:
+                failure_rate_2 += 1
+
+    # np.save(UTILITIES_PATH, utility_values_for_each_graph)
+    print('Total Number of Successes: ', success_of_Agent)
+    print('Total Number of Deaths   : ', failure_rate_1)
+    print('Total Number of Hangs    : ', failure_rate_2)
+    print("Agent path: ", agent.path)
+    print("Prey path: ", prey.path)
+    print("Predator path: ", predator.path)
 
     # To recall the data from the npy file:
     # my_graph_utilities = np.load(UTILITIES_PATH)
