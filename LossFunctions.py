@@ -19,5 +19,5 @@ def euclidean_loss(actual_output, expected_output):
 # dLoss/dA[L] = (A[L] - Expected_output) / norm (A[L] - Expected_output)
 def gradient_euclidean_loss(actual_output, expected_output):
     diff = actual_output - expected_output
-    return diff / np.linalg.norm(diff)
+    return np.divide(diff, np.linalg.norm(diff))
 

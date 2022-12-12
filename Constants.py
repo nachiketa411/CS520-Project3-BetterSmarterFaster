@@ -24,13 +24,15 @@ NO_OF_TIMES_I_WANT_UTILITIES_TO_BE_CONSISTENT = 2
 # -------------------------------------------------------
 # Neural Network Properties:-
 # -------------------------------------------------------
-ALPHA = 0.02
+ALPHA = 0.001
 NO_OF_HIDDEN_LAYERS = 2
 # the last value corresponds to the original number of outputs i.e. 1
 NO_OF_HIDDEN_UNITS = [5, 3, 1]
+INFINITY = 60.
+INFINITE_THRESHOLD = 150.
 
 BATCH_SIZE = 125000
-NO_OF_EPOCHS = 50
+NO_OF_EPOCHS = 10000
 
 
 

@@ -38,17 +38,17 @@ class NeuralNetwork:
         self.bias = []
         self.dB = []
         for layer in range(self.no_of_hidden_layers + 1):
-            self.bias.append(np.random.rand((self.no_of_units[layer], 1)))
+            self.bias.append(np.random.rand(self.no_of_units[layer], 1))
             self.dB.append(np.zeros((self.no_of_units[layer], 1)))
             if layer == 0:
-                self.weights.append(np.random.rand((self.no_of_units[layer], self.input_size)))
+                self.weights.append(np.random.rand(self.no_of_units[layer], self.input_size))
                 self.dW.append(np.zeros((self.no_of_units[layer], self.input_size)))
                 self.z.append(np.zeros((self.no_of_units[layer], self.input_size)))
                 self.dZ.append(np.zeros((self.no_of_units[layer], self.input_size)))
                 self.a.append(np.zeros((self.no_of_units[layer], self.input_size)))
                 self.dA.append(np.zeros((self.no_of_units[layer], self.input_size)))
             else:
-                self.weights.append(np.random.rand((self.no_of_units[layer], self.no_of_units[layer - 1])))
+                self.weights.append(np.random.rand(self.no_of_units[layer], self.no_of_units[layer - 1]))
                 self.dW.append(np.zeros((self.no_of_units[layer], self.no_of_units[layer - 1])))
                 self.z.append(np.zeros((self.no_of_units[layer], self.no_of_units[layer - 1])))
                 self.dZ.append(np.zeros((self.no_of_units[layer], self.no_of_units[layer - 1])))
@@ -64,33 +64,64 @@ class NeuralNetwork:
     # The first column represents the activation value for the first input, similarly the 2nd column represents
     # the activation for the 2nd input and so on
     def forward_propagation(self, input_vector):
-        self.a[0] = input_vector
+        # self.a[0] = input_vector
         for layer in range(self.no_of_hidden_layers + 1):
-            self.z[layer + 1] = (self.weights[layer] @ self.a[layer]) + self.bias[layer]
-            self.a[layer + 1] = self.activation_function(self.z[layer])
+            if layer == 0:
+                self.z[layer] = (self.weights[layer] @ input_vector) + self.bias[layer]
+            else:
+                self.z[layer] = (self.weights[layer] @ self.a[layer - 1]) + self.bias[layer]
+            self.a[layer] = self.activation_function(self.z[layer])
 
     # dL = dL/dA[Last layer]
-    def backward_propagate(self, expected_output):
+    def backward_propagate(self, input_vector, expected_output):
+        # print('BACK-PROP-------')
         for layer in range(self.no_of_hidden_layers, -1, -1):
+            # print('LAYER: ', layer)
+            # print('dA[layer]: ', np.shape(self.dA[layer]))
+            # if layer != self.no_of_hidden_layers:
+            #     print('dZ[layer + 1]: ', np.shape(self.dZ[layer + 1]))
+            #     print('weights[layer + 1].T: ', np.shape(self.weights[layer + 1].T))
             if layer == self.no_of_hidden_layers:
                 self.dA[layer] = self.gradient_loss(self.a[layer], expected_output)
             else:
-                self.dA[layer] = self.dZ[layer + 1] @ self.weights[layer + 1]
+                self.dA[layer] = np.dot(self.weights[layer + 1].T, self.dZ[layer + 1])
+            # print('dA: ', np.shape(self.dA[layer]))
             self.dZ[layer] = (self.dA[layer] * self.gradient_activation(self.z[layer]))
-            self.dW[layer] = np.dot(self.dZ[layer], self.a[layer - 1]) / self.batch_size
-            self.dB[layer] = np.sum(self.dZ[layer], axis=1, keepdims=True) / self.batch_size
-
+            # print('dZ: ', np.shape(self.dZ[layer]))
+            # print('a[layer]: ', np.shape(self.a[layer - 1]))
+            if layer == 0:
+                # self.dW[layer] = np.dot(self.dZ[layer], input_vector.T) / self.batch_size
+                self.dW[layer] = np.dot(self.dZ[layer], input_vector.T)
+            else:
+                # self.dW[layer] = np.dot(self.dZ[layer], self.a[layer - 1].T) / self.batch_size
+                self.dW[layer] = np.dot(self.dZ[layer], self.a[layer - 1].T)
+            # self.dB[layer] = np.sum(self.dZ[layer], axis=1, keepdims=True) / self.batch_size
+            self.dB[layer] = np.sum(self.dZ[layer], axis=1, keepdims=True)
+            #
+            # print('dW[layer]: ', np.shape(self.dW[layer]))
+            # print('weights[layer]: ', np.shape(self.weights[layer]))
+            #
+            # print('Weight of Layer: ', layer, ': ', self.weights[layer])
+            # print('dW of Layer: ', layer, ': ', self.dW[layer])
+            # print('Bias of Layer: ', layer, ': ', self.bias[layer])
+            # print('dB of Layer: ', layer, ': ', self.dB[layer])
             self.weights[layer] = self.weights[layer] - self.alpha * self.dW[layer]
+            # print('Updated Weight of Layer: ', layer, ': ', self.weights[layer])
             self.bias[layer] = self.bias[layer] - self.alpha * self.dB[layer]
+            # print('Updated Bias of Layer: ', layer, ': ', self.bias[layer])
 
             # dZ[self.no_of_hidden_layers - i] = dL
 
     def fit(self, input_vector, expected_output):
+        # print('Initial Weights: ', self.weights)
         for epoch in range(self.epochs):
+            # print('Weights')
             self.forward_propagation(input_vector)
-            self.backward_propagate(expected_output)
+            self.backward_propagate(input_vector, expected_output)
 
+            self.forward_propagation(input_vector)
             self.loss_for_epochs.append(self.loss_function(self.a[self.no_of_hidden_layers], expected_output))
+            # print('Weights: ', self.weights)
             print('Loss for Epoch: ', epoch, ' is: ', self.loss_for_epochs[epoch])
 
 
