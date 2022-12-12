@@ -1,4 +1,5 @@
 # Press the green button in the gutter to run the script.
+import copy
 import json
 
 import numpy as np
@@ -40,6 +41,7 @@ def read_from_json():
         distances_dictionary[graph_id] = distance_mat
     return graph_dictionary, distances_dictionary
 
+
 # def set_training_testing_data(dataset, batch_size):
 #     # dataset = (m x n)
 #     # dataset.shape[0] = m i.e. No. of rows or input_size
@@ -59,32 +61,45 @@ def input_x_y(node_distances, utility, NO_OF_FEATURES, BATCH_SIZE):
     y_values = np.zeros((BATCH_SIZE, 1))
     agent_low = 0
     agent_high = 2500
-    prey_low = 0
-    prey_high = 50
+    pred_low = 0
+    pred_high = 50
     for agent_pos in range(50):
         for i in range(agent_low, agent_high):
             x_values[0, i] = agent_pos
-        for prey_pos in range(50):
-            for j in range(prey_low, prey_high):
-                x_values[1, j] = prey_pos
-            for predator_pos in range(50):
-                z = prey_low + predator_pos
-                x_values[2, z] = predator_pos
-            prey_low += 50
-            prey_high += 50
+        for pred_pos in range(50):
+            for j in range(pred_low, pred_high):
+                x_values[1, j] = pred_pos
+            for prey_pos in range(50):
+                z = pred_low + prey_pos
+                x_values[2, z] = prey_pos
+            pred_low += 50
+            pred_high += 50
         agent_low += 2500
         agent_high += 2500
     for column in range(BATCH_SIZE):
         agent_loc = int(x_values[0, column])
-        prey_loc = int(x_values[1, column])
-        predator_loc = int(x_values[2, column])
-        print(agent_loc, prey_loc, predator_loc)
-        print(node_distances[agent_loc][prey_loc])
+        predator_loc = int(x_values[1, column])
+        prey_loc = int(x_values[2, column])
         x_values[3, column] = node_distances[agent_loc][prey_loc]
         x_values[4, column] = node_distances[agent_loc][predator_loc]
         x_values[5, column] = node_distances[prey_loc][predator_loc]
         y_values[column] = utility[agent_loc, predator_loc, prey_loc, 1]
     return [x_values, y_values.T]
+
+
+def shuffle_and_split(NO_OF_PARTS, x_values, utilities, BATCH_SIZE):
+    shuffled_x = copy.deepcopy(x_values)
+    shuffled_y = np.zeros((BATCH_SIZE, 1))
+    np.random.shuffle(np.transpose(shuffled_x))
+    for column in range(BATCH_SIZE):
+        agent_loc = int(shuffled_x[0][column])
+        predator_loc = int(shuffled_x[1][column])
+        prey_loc = int(shuffled_x[2][column])
+        shuffled_y[column] = utilities[agent_loc, predator_loc, prey_loc, 1]
+    shuffled_y = shuffled_y.T
+    shuffled_split_x = np.hsplit(shuffled_x, NO_OF_PARTS)
+    shuffled_split_y = np.hsplit(shuffled_y, NO_OF_PARTS)
+    return [shuffled_split_x, shuffled_split_y]
 
 
 if __name__ == '__main__':
@@ -100,10 +115,12 @@ if __name__ == '__main__':
 
     my_graph_utilities = np.load(UTILITIES_PATH, allow_pickle=True)
 
-    arr = input_x_y(converted_distances[0], my_graph_utilities[()][0], 6, 125000)[0]
-    print(arr)
-    print(np.shape(arr))
-
+    arr = input_x_y(converted_distances[0], my_graph_utilities[()][0], 6, 125000)
+    split_arr = shuffle_and_split(10, arr[0], my_graph_utilities[()][0], 125000)
+    print(arr[0])
+    print(np.shape(arr[0]))
+    print(split_arr[0][0], split_arr[1])
+    print(np.shape(split_arr[0]))
     # for k in range(1):
     #     # # Since the transition matrices calculated here won't change for different iterations of the same graph,
     #     # # we precalculate them and use them for each of the 30 iteration
