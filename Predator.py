@@ -1,3 +1,4 @@
+
 import random
 import copy
 
@@ -29,4 +30,3 @@ class Predator:
         else:
             print("Error")
         self.path.append(self.currPos)
-

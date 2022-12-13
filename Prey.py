@@ -10,7 +10,6 @@ class Prey:
         self.path = []
         self.path.append(self.currPos)
 
-
     def take_next_move(self, graph_dict):
         #print(graph_dict)
         my_neighbours = list(graph_dict[self.currPos])
