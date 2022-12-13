@@ -2,13 +2,14 @@ import random
 
 import numpy as np
 
-from Constants import ALPHA, NO_OF_HIDDEN_UNITS, NO_OF_HIDDEN_LAYERS
+from Constants import ALPHA, NO_OF_HIDDEN_UNITS, NO_OF_HIDDEN_LAYERS, BETA_1, BETA_2, EPSILON, WEIGHTS_PATH
+
 
 # NEED TO CHECK THE INDICES ISSUE
 
 class NeuralNetwork:
     def __init__(self, input_size, activation_function, gradient_activation,
-                 loss_function, gradient_loss, batch_size, no_of_epochs):
+                 loss_function, gradient_loss, batch_size, pre_trained_weights):
 
         np.random.seed(1)
         # hyperparameter initialization
@@ -25,9 +26,16 @@ class NeuralNetwork:
         self.dZ = []
         self.a = []
         self.dA = []
+
+        self.m_dW = []
+        self.m_dB = []
+
+        self.v_dW = []
+        self.v_dB = []
+
         self.input_size = input_size
         self.batch_size = batch_size
-        self.epochs = no_of_epochs
+        # self.epochs = no_of_epochs
         self.loss_for_epochs = []
 
         # self.dataset = dataset
@@ -40,6 +48,9 @@ class NeuralNetwork:
         for layer in range(self.no_of_hidden_layers + 1):
             self.bias.append(np.random.rand(self.no_of_units[layer], 1))
             self.dB.append(np.zeros((self.no_of_units[layer], 1)))
+
+            self.m_dB.append(np.zeros((self.no_of_units[layer], 1)))
+            self.v_dB.append(np.zeros((self.no_of_units[layer], 1)))
             if layer == 0:
                 self.weights.append(np.random.rand(self.no_of_units[layer], self.input_size))
                 self.dW.append(np.zeros((self.no_of_units[layer], self.input_size)))
@@ -47,6 +58,9 @@ class NeuralNetwork:
                 self.dZ.append(np.zeros((self.no_of_units[layer], self.input_size)))
                 self.a.append(np.zeros((self.no_of_units[layer], self.input_size)))
                 self.dA.append(np.zeros((self.no_of_units[layer], self.input_size)))
+
+                self.m_dW.append(np.zeros((self.no_of_units[layer], self.input_size)))
+                self.v_dW.append(np.zeros((self.no_of_units[layer], self.input_size)))
             else:
                 self.weights.append(np.random.rand(self.no_of_units[layer], self.no_of_units[layer - 1]))
                 self.dW.append(np.zeros((self.no_of_units[layer], self.no_of_units[layer - 1])))
@@ -54,6 +68,12 @@ class NeuralNetwork:
                 self.dZ.append(np.zeros((self.no_of_units[layer], self.no_of_units[layer - 1])))
                 self.a.append(np.zeros((self.no_of_units[layer], self.no_of_units[layer - 1])))
                 self.dA.append(np.zeros((self.no_of_units[layer], self.no_of_units[layer - 1])))
+
+                self.m_dW.append(np.zeros((self.no_of_units[layer], self.no_of_units[layer - 1])))
+                self.v_dW.append(np.zeros((self.no_of_units[layer], self.no_of_units[layer - 1])))
+
+        if pre_trained_weights is not None:
+            self.weights = pre_trained_weights
 
     # Input Vector Dims: input_size x Batch_Size
     # Expected Output Dims: Batch_Size x 1
@@ -73,22 +93,14 @@ class NeuralNetwork:
             self.a[layer] = self.activation_function(self.z[layer])
 
     # dL = dL/dA[Last layer]
-    def backward_propagate(self, input_vector, expected_output):
-        # print('BACK-PROP-------')
+    def backward_propagate(self, input_vector, expected_output, epoch):
         for layer in range(self.no_of_hidden_layers, -1, -1):
-            # print('LAYER: ', layer)
-            # print('dA[layer]: ', np.shape(self.dA[layer]))
-            # if layer != self.no_of_hidden_layers:
-            #     print('dZ[layer + 1]: ', np.shape(self.dZ[layer + 1]))
-            #     print('weights[layer + 1].T: ', np.shape(self.weights[layer + 1].T))
+            # print('LAYER: ', layer, '----------------')
             if layer == self.no_of_hidden_layers:
                 self.dA[layer] = self.gradient_loss(self.a[layer], expected_output)
             else:
                 self.dA[layer] = np.dot(self.weights[layer + 1].T, self.dZ[layer + 1])
-            # print('dA: ', np.shape(self.dA[layer]))
             self.dZ[layer] = (self.dA[layer] * self.gradient_activation(self.z[layer]))
-            # print('dZ: ', np.shape(self.dZ[layer]))
-            # print('a[layer]: ', np.shape(self.a[layer - 1]))
             if layer == 0:
                 # self.dW[layer] = np.dot(self.dZ[layer], input_vector.T) / self.batch_size
                 self.dW[layer] = np.dot(self.dZ[layer], input_vector.T)
@@ -97,32 +109,41 @@ class NeuralNetwork:
                 self.dW[layer] = np.dot(self.dZ[layer], self.a[layer - 1].T)
             # self.dB[layer] = np.sum(self.dZ[layer], axis=1, keepdims=True) / self.batch_size
             self.dB[layer] = np.sum(self.dZ[layer], axis=1, keepdims=True)
-            #
-            # print('dW[layer]: ', np.shape(self.dW[layer]))
-            # print('weights[layer]: ', np.shape(self.weights[layer]))
-            #
-            # print('Weight of Layer: ', layer, ': ', self.weights[layer])
-            # print('dW of Layer: ', layer, ': ', self.dW[layer])
-            # print('Bias of Layer: ', layer, ': ', self.bias[layer])
-            # print('dB of Layer: ', layer, ': ', self.dB[layer])
-            self.weights[layer] = self.weights[layer] - self.alpha * self.dW[layer]
-            # print('Updated Weight of Layer: ', layer, ': ', self.weights[layer])
-            self.bias[layer] = self.bias[layer] - self.alpha * self.dB[layer]
-            # print('Updated Bias of Layer: ', layer, ': ', self.bias[layer])
 
-            # dZ[self.no_of_hidden_layers - i] = dL
+            self.m_dW[layer] = (BETA_1 * self.m_dW[layer]) + ((1 - BETA_1) * self.dW[layer])
+            self.v_dW[layer] = (BETA_2 * self.v_dW[layer]) + ((1 - BETA_2) * np.square(self.dW[layer]))
+
+            self.m_dB[layer] = (BETA_1 * self.m_dB[layer]) + ((1 - BETA_1) * self.dB[layer])
+            self.v_dB[layer] = (BETA_2 * self.v_dB[layer]) + ((1 - BETA_2) * np.square(self.dB[layer]))
+
+            m_dw_bias_corrected = np.divide(self.m_dW[layer], 1 - (BETA_1 ** epoch))
+            v_dw_bias_corrected = np.divide(self.v_dW[layer], 1 - (BETA_2 ** epoch))
+
+            m_db_bias_corrected = np.divide(self.m_dB[layer], 1 - (BETA_1 ** epoch))
+            v_db_bias_corrected = np.divide(self.v_dB[layer], 1 - (BETA_2 ** epoch))
+
+            # self.weights[layer] = self.weights[layer] - self.alpha * self.dW[layer]
+            # self.bias[layer] = self.bias[layer] - self.alpha * self.dB[layer]
+            self.weights[layer] = self.weights[layer] - self.alpha * (m_dw_bias_corrected / (np.sqrt(v_dw_bias_corrected) + EPSILON))
+            self.bias[layer] = self.bias[layer] - self.alpha * (m_db_bias_corrected / (np.sqrt(v_db_bias_corrected) + EPSILON))
 
     def fit(self, input_vector, expected_output):
         # print('Initial Weights: ', self.weights)
-        for epoch in range(self.epochs):
+        epoch = 1
+        loss = np.array(self.loss_function(np.zeros(np.shape(expected_output)), expected_output))
+        while loss > 0.01:
             # print('Weights')
             self.forward_propagation(input_vector)
-            self.backward_propagate(input_vector, expected_output)
-
-            self.forward_propagation(input_vector)
-            self.loss_for_epochs.append(self.loss_function(self.a[self.no_of_hidden_layers], expected_output))
+            self.backward_propagate(input_vector, expected_output, epoch)
+            loss = np.array(self.loss_function(self.a[self.no_of_hidden_layers], expected_output))
+            # print(np.shape(loss))
+            loss_sum = np.sum(loss)
+            self.loss_for_epochs.append(loss_sum)
             # print('Weights: ', self.weights)
-            print('Loss for Epoch: ', epoch, ' is: ', self.loss_for_epochs[epoch])
+            if epoch % 1000 == 0:
+                np.save(WEIGHTS_PATH, self.weights)
+                print('Loss for Epoch: ', epoch, ' is: ', self.loss_for_epochs[epoch - 1])
+            epoch += 1
 
 
 
