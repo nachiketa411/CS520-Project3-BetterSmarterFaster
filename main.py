@@ -9,7 +9,7 @@ from ActivationFunction import sigmoid, gradient_sigmoid, tan_h, gradient_tan_h,
 from AgentUStar import AgentUStar
 from AgentUpartial import AgentUpartial
 from Constants import ENVIRONMENT_PATH, GRAPH_DIST_PATH, UTILITIES_PATH, BATCH_SIZE, INFINITY, TWO_LAYER_WEIGHTS_PATH, \
-    ONE_LAYER_WEIGHTS_PATH, V_MODEL_UTILITIES_PATH
+    ONE_LAYER_WEIGHTS_PATH, V_MODEL_UTILITIES_PATH, SIX_LAYER_WEIGHTS_PATH
 from LossFunctions import euclidean_loss, gradient_euclidean_loss, gradient_manhattan_loss, manhattan_loss
 from NeuralNetwork import NeuralNetwork
 from Predator import Predator
@@ -87,7 +87,7 @@ def input_x_y(node_distances, utility, NO_OF_FEATURES, BATCH_SIZE):
         prey_loc = int(x_values[2, column])
         x_values[3, column] = node_distances[agent_loc][prey_loc]
         x_values[4, column] = node_distances[agent_loc][predator_loc]
-        x_values[5, column] = node_distances[prey_loc][predator_loc]
+        # x_values[5, column] = node_distances[prey_loc][predator_loc]
         y_values[column] = utility[agent_loc, predator_loc, prey_loc, 1]
         y_values[y_values == np.inf] = INFINITY
     return [x_values, y_values.T]
@@ -122,9 +122,11 @@ if __name__ == '__main__':
 
     my_graph_utilities = np.load(UTILITIES_PATH, allow_pickle=True)
     # my_weights = np.load(TWO_LAYER_WEIGHTS_PATH, allow_pickle=True)
-    my_weights = np.load(ONE_LAYER_WEIGHTS_PATH, allow_pickle=True)
+    # my_weights = np.load(ONE_LAYER_WEIGHTS_PATH, allow_pickle=True)
 
-    arr = input_x_y(converted_distances[0], my_graph_utilities[()][0], 6, 125000)
+    my_weights = np.load(SIX_LAYER_WEIGHTS_PATH, allow_pickle=True)
+
+    arr = input_x_y(converted_distances[0], my_graph_utilities[()][0], 5, 125000)
     split_arr = shuffle_and_split(100, arr[0], my_graph_utilities[()][0], 125000)
 
     # node_distances = converted_distances[0]
@@ -217,78 +219,78 @@ if __name__ == '__main__':
         predator_transitions = transitions.predator_transition
         prey_transitions = transitions.prey_transition
 
-        nn = NeuralNetwork(6, leaky_rel_u, gradient_leaky_rel_u,
+        nn = NeuralNetwork(5, sigmoid, gradient_sigmoid,
                            euclidean_loss, gradient_euclidean_loss, BATCH_SIZE, my_weights)
-        # # START OF TRAINING OF NEURAL NETWORK-------------------------------------------------------------------------
-        # loop = True
-        # epoch = 1
-        # while loop:
-        #     input_vector = split_arr[0]
-        #     output_vector = split_arr[1]
-        #     for i in range(len(input_vector)):
-        #         X = input_vector[i]
-        #         Y = output_vector[i]
-        #         nn.fit(X, Y, epoch, i + 1)
-        #
-        #     if epoch % 1000 == 0:
-        #         np.save(ONE_LAYER_WEIGHTS_PATH, nn.weights)
-        #
-        #     epoch += 1
-        # # END OF TRAINING OF NEURAL NETWORK---------------------------------------------------------------------------
+        # START OF TRAINING OF NEURAL NETWORK-------------------------------------------------------------------------
+        loop = True
+        epoch = 1
+        while loop:
+            input_vector = split_arr[0]
+            output_vector = split_arr[1]
+            for i in range(len(input_vector)):
+                X = input_vector[i]
+                Y = output_vector[i]
+                nn.fit(X, Y, epoch, i + 1)
 
-        # START OF Agent-V---------------------------------------------------------------------------------------------
-        # v_utilities = np.zeros((50, 50, 50, 2))
-        # for agent_pos in range(len(graph)):
-        #     for predator_pos in range(len(graph)):
-        #         for prey_pos in range(len(graph)):
-        #             agent_prey_dist = node_distances[agent_pos][prey_pos]
-        #             agent_predator_dist = node_distances[agent_pos][predator_pos]
-        #             prey_predator_dist = node_distances[prey_pos][predator_pos]
-        #             X = np.zeros((6, 1))
-        #             X[0, 0] = agent_pos
-        #             X[1, 0] = predator_pos
-        #             X[2, 0] = prey_pos
-        #             X[3, 0] = agent_prey_dist
-        #             X[4, 0] = agent_predator_dist
-        #             X[5, 0] = prey_predator_dist
-        #             utility_of_current_state = nn.predict(X)
-        #             v_utilities[agent_pos, predator_pos, prey_pos, 1] = utility_of_current_state
-        #
-        # # Not updating the utilities, but rather using those utilities to calculate the next move
-        # v_utilities = nn.calculate_next_action_for_each_state(v_utilities, predator_transitions, prey_transitions, graph)
-        # np.save(V_MODEL_UTILITIES_PATH, v_utilities)
+            if epoch % 1000 == 0:
+                # np.save(ONE_LAYER_WEIGHTS_PATH, nn.weights)
+                np.save(SIX_LAYER_WEIGHTS_PATH, nn.weights)
 
-        v_utility = np.load(V_MODEL_UTILITIES_PATH, allow_pickle=True)
-        for i in range(3000):
-            prey = Prey(graph)
-            predator = Predator(graph, node_distances)
-            # We used the same class as U-Star for Model-V since there were no changes in the methodology.
-            agent = AgentUStar(prey, graph)
-            agent.initialize(predator)
-            predator.initialize(agent)
-            agent.set_utility(v_utility)
+            epoch += 1
+        # END OF TRAINING OF NEURAL NETWORK---------------------------------------------------------------------------
 
-            while agent.utility[agent.currPos, predator.currPos, prey.currPos, 1] == np.inf:
-                prey = Prey(graph)
-                predator = Predator(graph, node_distances)
-                agent = AgentUStar(prey, graph)
-                agent.initialize(predator)
-                predator.initialize(agent)
-                agent.set_utility(v_utility)
-
-            # steps_taken = agent.move_agent()
-            steps_taken = agent.move_agent()
-            if steps_taken[1] == -1:
-                success_of_Agent += 1
-            if steps_taken[1] == -2:
-                failure_rate_1 += 1
-            if steps_taken[1] == -3:
-                failure_rate_2 += 1
-
-    # np.save(UTILITIES_PATH, utility_values_for_each_graph)
-    print('Total Number of Successes: ', success_of_Agent)
-    print('Total Number of Deaths   : ', failure_rate_1)
-    print('Total Number of Hangs    : ', failure_rate_2)
+    #     # START OF Agent-V---------------------------------------------------------------------------------------------
+    #     # v_utilities = np.zeros((50, 50, 50, 2))
+    #     # for agent_pos in range(len(graph)):
+    #     #     for predator_pos in range(len(graph)):
+    #     #         for prey_pos in range(len(graph)):
+    #     #             agent_prey_dist = node_distances[agent_pos][prey_pos]
+    #     #             agent_predator_dist = node_distances[agent_pos][predator_pos]
+    #     #             prey_predator_dist = node_distances[prey_pos][predator_pos]
+    #     #             X = np.zeros((6, 1))
+    #     #             X[0, 0] = agent_pos
+    #     #             X[1, 0] = predator_pos
+    #     #             X[2, 0] = prey_pos
+    #     #             X[3, 0] = agent_prey_dist
+    #     #             X[4, 0] = agent_predator_dist
+    #     #             X[5, 0] = prey_predator_dist
+    #     #             utility_of_current_state = nn.predict(X)
+    #     #             v_utilities[agent_pos, predator_pos, prey_pos, 1] = utility_of_current_state
+    #     #
+    #     # # Not updating the utilities, but rather using those utilities to calculate the next move
+    #     # v_utilities = nn.calculate_next_action_for_each_state(v_utilities, predator_transitions, prey_transitions, graph)
+    #     # np.save(V_MODEL_UTILITIES_PATH, v_utilities)
+    #
+    #     v_utility = np.load(V_MODEL_UTILITIES_PATH, allow_pickle=True)
+    #     for i in range(3000):
+    #         prey = Prey(graph)
+    #         predator = Predator(graph, node_distances)
+    #         # We used the same class as U-Star for Model-V since there were no changes in the methodology.
+    #         agent = AgentUStar(prey, graph)
+    #         agent.initialize(predator)
+    #         predator.initialize(agent)
+    #         agent.set_utility(v_utility)
+    #
+    #         while agent.utility[agent.currPos, predator.currPos, prey.currPos, 1] == np.inf:
+    #             prey = Prey(graph)
+    #             predator = Predator(graph, node_distances)
+    #             agent = AgentUStar(prey, graph)
+    #             agent.initialize(predator)
+    #             predator.initialize(agent)
+    #             agent.set_utility(v_utility)
+    #
+    #         # steps_taken = agent.move_agent()
+    #         steps_taken = agent.move_agent()
+    #         if steps_taken[1] == -1:
+    #             success_of_Agent += 1
+    #         if steps_taken[1] == -2:
+    #             failure_rate_1 += 1
+    #         if steps_taken[1] == -3:
+    #             failure_rate_2 += 1
+    #
+    # print('Total Number of Successes: ', success_of_Agent)
+    # print('Total Number of Deaths   : ', failure_rate_1)
+    # print('Total Number of Hangs    : ', failure_rate_2)
 
         # END OF Agent-V-----------------------------------------------------------------------------------------------
 
