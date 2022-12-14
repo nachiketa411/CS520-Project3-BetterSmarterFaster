@@ -23,7 +23,7 @@ class Agent(ABC):
         self.counter_for_prey_actually_found = 0
         self.counter_for_predator_actually_found = 0
         self.utility = np.zeros((50, 50, 50, 2))
-        self.utility_V_partial = []
+        self.utility_V_partial_data = []
 
     def initialize(self, predator):
         self.predator = predator

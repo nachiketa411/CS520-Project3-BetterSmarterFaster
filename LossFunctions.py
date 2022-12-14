@@ -1,5 +1,6 @@
 import numpy as np
-
+# import warnings
+# warnings.filterwarnings("error")
 
 # Loss = |A[L] - Expected_output|
 def manhattan_loss(actual_output, expected_output):

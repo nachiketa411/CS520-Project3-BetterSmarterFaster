@@ -6,7 +6,7 @@ from Constants import NO_OF_STEPS_4, NO_OF_NODES
 
 
 class AgentUpartial(Agent):
-    def move_agent(self, prey_transition_matrix, predator_transition_matrix):
+    def move_agent(self, prey_transition_matrix, predator_transition_matrix, node_distances, utility_V_partial_data):
         count = 0
         belief = [1 / 49] * 50
         belief[self.currPos] = 0
@@ -19,7 +19,7 @@ class AgentUpartial(Agent):
             belief = self.update_belief(belief, to_survey)
             # print("After survey", sum(belief))
             # print(belief)
-            next_move = self.get_next_move(belief, prey_transition_matrix, predator_transition_matrix)
+            next_move = self.get_next_move(belief, prey_transition_matrix, predator_transition_matrix, node_distances, utility_V_partial_data)
 
             self.currPos = next_move
             self.path.append(next_move)
@@ -52,8 +52,9 @@ class AgentUpartial(Agent):
             count += 1
         return [count, -3, self.counter_for_prey_actually_found, self.counter_for_predator_actually_found]
 
-    def get_next_move(self, belief, prey_transition_matrix, predator_transition_matrix):
+    def get_next_move(self, belief, prey_transition_matrix, predator_transition_matrix, node_distances, utility_V_partial_data):
         upartial = {}
+        belief_with_transition = np.array(belief) @ np.array(prey_transition_matrix)
         for possible_next_move in self.graph[self.currPos]:
             if possible_next_move == self.predator.currPos:
                 upartial[possible_next_move] = np.inf
@@ -62,7 +63,6 @@ class AgentUpartial(Agent):
                 predator_transition = predator_transition_matrix[possible_next_move]
                 neighbours_of_predator = self.graph[self.predator.currPos]
                 for neighbour_of_predator in neighbours_of_predator:
-                    belief_with_transition = np.array(belief) @ np.array(prey_transition_matrix)
                     for i in range(len(belief)):
                         if self.utility[possible_next_move, neighbour_of_predator, i, 1] == np.inf and \
                                 (predator_transition[self.predator.currPos, neighbour_of_predator] == 0 or
@@ -74,6 +74,16 @@ class AgentUpartial(Agent):
                                           self.utility[possible_next_move, neighbour_of_predator, i, 1])
                 upartial[possible_next_move] = summation
         optimal_step = min(upartial, key=upartial.get)
+
+        utility_V_partial_data.append([
+            self.currPos,
+            self.predator.currPos,
+            np.dot(belief, node_distances[self.currPos]),
+            np.dot(belief, node_distances[self.predator.currPos]),
+            *belief,
+            upartial[optimal_step],
+        ])
+
         return int(optimal_step)
 
     def select_node(self, belief_mat):

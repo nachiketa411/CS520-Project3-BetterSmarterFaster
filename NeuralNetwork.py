@@ -135,7 +135,9 @@ class NeuralNetwork:
         self.backward_propagate(input_vector, expected_output, epoch)
         loss = np.sum(np.array(self.loss_function(self.a[self.no_of_hidden_layers], expected_output)))
         self.loss_for_batches.append(loss)
-        if epoch % 1000 == 0 and batch_num % 100 == 0:
+        # if epoch % 1000 == 0 and batch_num % 100 == 0:
+        # if epoch % 1000 == 0 and batch_num % 50 == 0:
+        if epoch % 1000 == 0 and batch_num % 41 == 0:
             print('Loss for Epoch: ', epoch, ' is: ', loss)
 
         # # print('Initial Weights: ', self.weights)
