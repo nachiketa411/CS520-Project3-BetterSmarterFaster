@@ -49,21 +49,6 @@ def read_from_json():
         distances_dictionary[graph_id] = distance_mat
     return graph_dictionary, distances_dictionary
 
-
-# def set_training_testing_data(dataset, batch_size):
-#     # dataset = (m x n)
-#     # dataset.shape[0] = m i.e. No. of rows or input_size
-#     total_indices = set(range(dataset.shape[0]))
-#     training_indices = set(random.sample(total_indices, batch_size))
-#     testing_indices = list(total_indices - training_indices)
-#     training_indices = list(training_indices)
-#
-#     np.random.shuffle(training_indices)
-#     np.random.shuffle(testing_indices)
-#
-#     training_data = dataset[training_indices]
-#     testing_data = dataset[testing_indices]
-
 def input_x_y(node_distances, utility, NO_OF_FEATURES, BATCH_SIZE):
     x_values = np.zeros((NO_OF_FEATURES, BATCH_SIZE))
     y_values = np.zeros((BATCH_SIZE, 1))
@@ -124,13 +109,7 @@ def shuffle_and_split(NO_OF_PARTS, x_values, utilities):
 
 
 def split_data(my_dataset):
-    arr = np.array(np.array_split(my_dataset, 41))
-    print('Dataset Shape: ', np.shape(my_dataset))
-    # print('New Dataset shape: ', np.shape(arr))
-    # print('New Dataset shape: ', np.shape(arr[0]))
-    # print(arr[0].T[:,:-1])
-    # print(len(arr))
-    return arr
+    return np.array(np.array_split(my_dataset, 41))
 
 
 if __name__ == '__main__':
@@ -145,13 +124,6 @@ if __name__ == '__main__':
     failure_rate_2 = 0
 
     my_graph_utilities = np.load(UTILITIES_PATH, allow_pickle=True)
-    # my_weights = np.load(TWO_LAYER_WEIGHTS_PATH, allow_pickle=True)
-    # my_weights = np.load(ONE_LAYER_WEIGHTS_PATH, allow_pickle=True)
-
-    # my_weights = np.load(SIX_LAYER_WEIGHTS_PATH, allow_pickle=True)
-    # my_weights = np.load(V_PARTIAL_6_LAYER_WEIGHTS_PATH, allow_pickle=True)
-    # my_weights = np.load(V_PARTIAL_6_LAYER_WITH_54_INPUTS_WEIGHTS_PATH, allow_pickle=True)
-    my_weights = np.load(V_PARTIAL_2_LAYER_WITH_54_INPUTS_WEIGHTS_PATH, allow_pickle=True)
 
 
     arr = input_x_y(converted_distances[0], my_graph_utilities[()][0], 5, 125000)
@@ -217,6 +189,14 @@ if __name__ == '__main__':
 
 # END OF U-Star and U-Partial Agent Runnable-----------------------------------------------------------------------
 
+    # my_weights = np.load(TWO_LAYER_WEIGHTS_PATH, allow_pickle=True)
+    # my_weights = np.load(ONE_LAYER_WEIGHTS_PATH, allow_pickle=True)
+
+    # my_weights = np.load(SIX_LAYER_WEIGHTS_PATH, allow_pickle=True)
+    # my_weights = np.load(V_PARTIAL_6_LAYER_WEIGHTS_PATH, allow_pickle=True)
+    # my_weights = np.load(V_PARTIAL_6_LAYER_WITH_54_INPUTS_WEIGHTS_PATH, allow_pickle=True)
+    my_weights = np.load(V_PARTIAL_2_LAYER_WITH_54_INPUTS_WEIGHTS_PATH, allow_pickle=True)
+
 # NEURAL NETWORK-------------------------------------------------------------------------------------------------------
     count = 0
     for k in range(1):
@@ -235,7 +215,7 @@ if __name__ == '__main__':
         # my_dataset = dataset
         # split_arr = split_data(my_dataset)
         # # The above line is for V-Partial Only-------------------------------------------------------------------
-        #
+
         # # nn = NeuralNetwork(5, sigmoid, gradient_sigmoid,
         # #                    euclidean_loss, gradient_euclidean_loss, BATCH_SIZE, None)
         # nn = NeuralNetwork(54, sigmoid, gradient_sigmoid,
@@ -264,7 +244,10 @@ if __name__ == '__main__':
         #     epoch += 1
 #         # END OF TRAINING OF NEURAL NETWORK---------------------------------------------------------------------------
 
-        # # START OF Agent-V---------------------------------------------------------------------------------------------
+        # We are generating a Utility file for Agent V which we pass to U-star class.
+        # The following code is used to generate Agent-V's utility file
+
+        # # START OF Agent-V--------------------------------------------------------------------------------------------
         # v_utilities = np.zeros((50, 50, 50, 2))
         # for agent_pos in range(len(graph)):
         #     for predator_pos in range(len(graph)):
@@ -343,5 +326,3 @@ if __name__ == '__main__':
 
 # END OF NEURAL NETWORK------------------------------------------------------------------------------------------------
 
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
