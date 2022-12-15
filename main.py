@@ -151,7 +151,7 @@ if __name__ == '__main__':
     # my_weights = np.load(SIX_LAYER_WEIGHTS_PATH, allow_pickle=True)
     # my_weights = np.load(V_PARTIAL_6_LAYER_WEIGHTS_PATH, allow_pickle=True)
     # my_weights = np.load(V_PARTIAL_6_LAYER_WITH_54_INPUTS_WEIGHTS_PATH, allow_pickle=True)
-    # my_weights = np.load(V_PARTIAL_2_LAYER_WITH_54_INPUTS_WEIGHTS_PATH, allow_pickle=True)
+    my_weights = np.load(V_PARTIAL_2_LAYER_WITH_54_INPUTS_WEIGHTS_PATH, allow_pickle=True)
 
 
     arr = input_x_y(converted_distances[0], my_graph_utilities[()][0], 5, 125000)
@@ -159,34 +159,6 @@ if __name__ == '__main__':
     split_arr = shuffle_and_split(50, arr[0], my_graph_utilities[()][0])
     # node_distances = converted_distances[0]
     graph_utility = my_graph_utilities[()][0]
-
-    # X = np.zeros((6, 3))
-    # X[0, 0] = 12.
-    # X[1, 0] = 34.
-    # X[2, 0] = 40.
-    # X[3, 0] = node_distances[int(X[0, 0])][int(X[1, 0])]
-    # X[4, 0] = node_distances[int(X[0, 0])][int(X[2, 0])]
-    # X[5, 0] = node_distances[int(X[1, 0])][int(X[2, 0])]
-    # X[0, 1] = 1.
-    # X[1, 1] = 4.
-    # X[2, 1] = 10.
-    # X[3, 1] = node_distances[int(X[0, 0])][int(X[1, 0])]
-    # X[4, 1] = node_distances[int(X[0, 0])][int(X[2, 0])]
-    # X[5, 1] = node_distances[int(X[1, 0])][int(X[2, 0])]
-    # X[0, 2] = 10.
-    # X[1, 2] = 4.
-    # X[2, 2] = 10.
-    # X[3, 2] = node_distances[int(X[0, 0])][int(X[1, 0])]
-    # X[4, 2] = node_distances[int(X[0, 0])][int(X[2, 0])]
-    # X[5, 2] = node_distances[int(X[1, 0])][int(X[2, 0])]
-    #
-    # Y = np.zeros((3, 1))
-    # Y[0, 0] = graph_utility[int(X[0, 0]), int(X[1, 0]), int(X[2, 0]), 1]
-    # Y[1, 0] = graph_utility[int(X[0, 1]), int(X[1, 1]), int(X[2, 1]), 1]
-    # Y[2, 0] = graph_utility[int(X[0, 2]), int(X[1, 2]), int(X[2, 2]), 1]
-    # print('Expected Outcome: ', Y[0, 0])
-
-    # print(len(split_arr[0]))
 
 # START OF U-Star and U-Partial Agent Runnable-----------------------------------------------------------------------
 #     for k in range(1):
@@ -246,6 +218,7 @@ if __name__ == '__main__':
 # END OF U-Star and U-Partial Agent Runnable-----------------------------------------------------------------------
 
 # NEURAL NETWORK-------------------------------------------------------------------------------------------------------
+    count = 0
     for k in range(1):
         graph = converted_graph[k]
         node_distances = converted_distances[k]
@@ -253,42 +226,42 @@ if __name__ == '__main__':
         predator_transitions = transitions.predator_transition
         prey_transitions = transitions.prey_transition
 
-        # The following line is for V-Partial Only-------------------------------------------------------------------
-        dataset = np.load(U_PARTIAL_UTILITIES, allow_pickle=True)
-        dataset = dataset[np.abs(dataset[:, -1]) != np.inf]
-        # Total size of inputs = 194381
-        # Therefore, batch size = 4741
-        # This divides the dataset into 41 equal parts.
-        my_dataset = dataset
-        split_arr = split_data(my_dataset)
-        # The above line is for V-Partial Only-------------------------------------------------------------------
-
-        # nn = NeuralNetwork(5, sigmoid, gradient_sigmoid,
-        #                    euclidean_loss, gradient_euclidean_loss, BATCH_SIZE, None)
-        nn = NeuralNetwork(54, sigmoid, gradient_sigmoid,
-                           euclidean_loss, gradient_euclidean_loss, BATCH_SIZE, None)
+        # # The following line is for V-Partial Only-------------------------------------------------------------------
+        # dataset = np.load(U_PARTIAL_UTILITIES, allow_pickle=True)
+        # dataset = dataset[np.abs(dataset[:, -1]) != np.inf]
+        # # Total size of inputs = 194381
+        # # Therefore, batch size = 4741
+        # # This divides the dataset into 41 equal parts.
+        # my_dataset = dataset
+        # split_arr = split_data(my_dataset)
+        # # The above line is for V-Partial Only-------------------------------------------------------------------
+        #
+        # # nn = NeuralNetwork(5, sigmoid, gradient_sigmoid,
+        # #                    euclidean_loss, gradient_euclidean_loss, BATCH_SIZE, None)
+        # nn = NeuralNetwork(54, sigmoid, gradient_sigmoid,
+        #                    euclidean_loss, gradient_euclidean_loss, BATCH_SIZE, my_weights)
         # START OF TRAINING OF NEURAL NETWORK-------------------------------------------------------------------------
-        loop = True
-        epoch = 1
-        while loop:
-            # input_vector = split_arr[0]
-            # output_vector = split_arr[1]
-            for i in range(len(split_arr)):
-                data = split_arr[i].T
-                input_vector = data[: -1, :]
-                output_vector = data[-1:, :]
-                # X = input_vector[i]
-                # Y = output_vector[i]
-                # nn.fit(X, Y, epoch, i + 1)
-                nn.fit(input_vector, output_vector, epoch, i + 1)
-
-            if epoch % 1000 == 0:
-                # np.save(ONE_LAYER_WEIGHTS_PATH, nn.weights)
-                # np.save(SIX_LAYER_WEIGHTS_PATH, nn.weights)
-                # np.save(V_PARTIAL_6_LAYER_WEIGHTS_PATH, nn.weights)
-                np.save(V_PARTIAL_2_LAYER_WITH_54_INPUTS_WEIGHTS_PATH, nn.weights)
-
-            epoch += 1
+        # loop = True
+        # epoch = 1
+        # while loop:
+        #     # input_vector = split_arr[0]
+        #     # output_vector = split_arr[1]
+        #     for i in range(len(split_arr)):
+        #         data = split_arr[i].T
+        #         input_vector = data[: -1, :]
+        #         output_vector = data[-1:, :]
+        #         # X = input_vector[i]
+        #         # Y = output_vector[i]
+        #         # nn.fit(X, Y, epoch, i + 1)
+        #         nn.fit(input_vector, output_vector, epoch, i + 1)
+        #
+        #     if epoch % 1000 == 0:
+        #         # np.save(ONE_LAYER_WEIGHTS_PATH, nn.weights)
+        #         # np.save(SIX_LAYER_WEIGHTS_PATH, nn.weights)
+        #         # np.save(V_PARTIAL_6_LAYER_WEIGHTS_PATH, nn.weights)
+        #         np.save(V_PARTIAL_2_LAYER_WITH_54_INPUTS_WEIGHTS_PATH, nn.weights)
+        #
+        #     epoch += 1
 #         # END OF TRAINING OF NEURAL NETWORK---------------------------------------------------------------------------
 
         # # START OF Agent-V---------------------------------------------------------------------------------------------
@@ -323,45 +296,48 @@ if __name__ == '__main__':
         # np.save(V_MODEL_SIX_LAYER_UTILITIES_PATH, v_utilities)
 
     #     # v_utility = np.load(V_MODEL_UTILITIES_PATH, allow_pickle=True)
-    #     v_utility = np.load(V_MODEL_SIX_LAYER_UTILITIES_PATH, allow_pickle=True)
-    #     utility_V_partial_data = []
-    #     for i in range(3000):
-    #         prey = Prey(graph)
-    #         predator = Predator(graph, node_distances)
-    #         # We used the same class as U-Star for Model-V since there were no changes in the methodology.
-    #         # agent = AgentUStar(prey, graph)
-    #         # agent = AgentUpartial(prey, graph)
-    #         agent = AgentVPartial(prey, graph)
-    #         agent.initialize(predator)
-    #         predator.initialize(agent)
-    #         # agent.set_utility(v_utility)
-    #
-    #         while agent.utility[agent.currPos, predator.currPos, prey.currPos, 1] == np.inf:
-    #             prey = Prey(graph)
-    #             predator = Predator(graph, node_distances)
-    #             # agent = AgentUStar(prey, graph)
-    #             # agent = AgentUpartial(prey, graph)
-    #             agent = AgentVPartial(prey, graph)
-    #             agent.initialize(predator)
-    #             predator.initialize(agent)
-    #             # agent.set_utility(v_utility)
-    #
-    #         # steps_taken = agent.move_agent()
-    #         steps_taken = agent.move_agent(prey_transitions, predator_transitions, node_distances, nn)
-    #         if steps_taken[1] == -1:
-    #             success_of_Agent += 1
-    #         if steps_taken[1] == -2:
-    #             failure_rate_1 += 1
-    #         if steps_taken[1] == -3:
-    #             failure_rate_2 += 1
-    #
-    #         if i % 100 == 0:
-    #             print('Processed Graph Iteration: ', i)
-    #
-    #     # np.save(U_PARTIAL_UTILITIES, utility_V_partial_data)
-    # print('Total Number of Successes: ', success_of_Agent)
-    # print('Total Number of Deaths   : ', failure_rate_1)
-    # print('Total Number of Hangs    : ', failure_rate_2)
+        v_utility = np.load(V_MODEL_SIX_LAYER_UTILITIES_PATH, allow_pickle=True)
+        utility_V_partial_data = []
+        for i in range(3000):
+            prey = Prey(graph)
+            predator = Predator(graph, node_distances)
+            # We used the same class as U-Star for Model-V since there were no changes in the methodology.
+            agent = AgentUStar(prey, graph)
+            # agent = AgentUpartial(prey, graph)
+            # agent = AgentVPartial(prey, graph)
+            agent.initialize(predator)
+            predator.initialize(agent)
+            agent.set_utility(v_utility)
+
+            while agent.utility[agent.currPos, predator.currPos, prey.currPos, 1] == np.inf:
+                prey = Prey(graph)
+                predator = Predator(graph, node_distances)
+                agent = AgentUStar(prey, graph)
+                # agent = AgentUpartial(prey, graph)
+                # agent = AgentVPartial(prey, graph)
+                agent.initialize(predator)
+                predator.initialize(agent)
+                agent.set_utility(v_utility)
+
+            steps_taken = agent.move_agent()
+            # steps_taken = agent.move_agent(prey_transitions, predator_transitions, node_distances, nn)
+            if steps_taken[1] == -1:
+                success_of_Agent += 1
+            if steps_taken[1] == -2:
+                failure_rate_1 += 1
+            if steps_taken[1] == -3:
+                failure_rate_2 += 1
+
+            count += steps_taken[0]
+
+            # if i % 100 == 0:
+            #     print('Processed Graph Iteration: ', i)
+
+        # np.save(U_PARTIAL_UTILITIES, utility_V_partial_data)
+    print('Total Number of Successes: ', success_of_Agent)
+    print('Total Number of Deaths   : ', failure_rate_1)
+    print('Total Number of Hangs    : ', failure_rate_2)
+    print('Average Number of Steps  : ', count / 3000)
 
         # END OF Agent-V-----------------------------------------------------------------------------------------------
 
